@@ -4,6 +4,7 @@ __pycache__/
 *$py.class
 
 testing.py
+flask-mail.py
 
 # C extensions
 *.so
