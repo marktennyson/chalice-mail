@@ -16,5 +16,14 @@ class SMTPLoginError(Exception):
         super().__init__(self.message)
 
 class MIMETypeError(Exception):
-    def __init__(self):
+    def __init__(self, flag=False) -> None:
         super().__init__("html and plain can't be set at same time.")
+
+class Jinja2ContextDataError(Exception):
+    def __init__(self) -> None:
+        super().__init__("templating jinja2 format is not valid.")
+
+class AttachmentNotFoundError(Exception):
+    def __init__(self, attachment_file):
+        self.message = "{0} not found at attachments folder".format(attachment_file)
+        super().__init__("")

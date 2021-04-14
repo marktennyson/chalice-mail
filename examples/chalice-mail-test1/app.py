@@ -16,6 +16,7 @@ mail.password = getenv('email_password')
 mail.smtp_server = 'smtp.gmail.com'
 mail.smtp_port = 587
 mail.template_dir = _baseDir/'templates'
+mail.attachment_dir = _baseDir/'attachments'
 mail.login()
 
 @app.route('/')
@@ -25,7 +26,9 @@ def index():
     # msg.recipients = ['aniketsarkar@yahoo.com']
     msg.add_recipient("aniketsarkarkorea@gmail.com")
     # msg.add_recipient(["aniket@cloodon.com"])
-    msg.html = "<h1>Hello World</h1>"
+    # msg.html = "<h1>Hello World</h1>"
+    msg.html = msg.render_template('text.html', email="aniketsarkarkorea@gmail.com")
     # msg.body = "Aniket"
+    msg.add_attachment(['aniket.jpg', 'attachments.txt'])
     mail.send_email(msg)
     return {'message':'email sended successfully'}

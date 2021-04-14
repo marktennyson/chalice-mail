@@ -1,6 +1,8 @@
 from smtplib import SMTP
-from .errors import TemplateNotFoundError, InsufficientError, SMTPLoginError
+from .errors import *
 from chalice import Chalice
+from jinja2 import Template, exceptions
+from pathlib import Path
 
 
 class Mail:
@@ -13,7 +15,8 @@ class Mail:
             is_ses:bool=None, 
             is_using_ssl:bool=None, 
             is_using_tls:bool=None, 
-            template_dir:str=None) -> None:
+            template_dir:str=None,
+            attachment_dir:str=None) -> None:
         self.username:str = username
         self.password:str = password
         self.smtp_server:str = smtp_server
@@ -23,6 +26,7 @@ class Mail:
         self.is_using_ssl:bool = is_using_ssl
         self.is_using_tls:bool = is_using_tls
         self.template_dir:str = template_dir
+        self.attachment_dir:str = attachment_dir
         self.c_app = c_app
         if self.is_using_ssl: self.is_using_tls = False
         elif self.is_using_tls: self.is_using_ssl = False
@@ -48,3 +52,12 @@ class Mail:
 
     def send_email(self, message):
         self.smtp.sendmail(self.username, message.recipients, message.to_string())
+
+    def render_template(self, template_file, **context) -> str:
+        if not self.template_dir: raise InsufficientError('template_dir')
+        try: 
+            with open(Path(self.template_dir)/template_file, 'r') as f:
+                template:Template = Template(f.read())
+                return template.render(context)
+        except FileNotFoundError: raise TemplateNotFoundError(template_file)
+        except exceptions.UndefinedError: raise Jinja2ContextDataError
