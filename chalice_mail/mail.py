@@ -1,8 +1,9 @@
-from smtplib import SMTP
+from smtplib import SMTP, SMTP_SSL
 from .errors import *
 from chalice import Chalice
 from jinja2 import Template, exceptions
 from pathlib import Path
+from ssl import create_default_context
 
 
 class Mail:
@@ -13,8 +14,8 @@ class Mail:
             smtp_port:int=None, 
             is_smtp:bool=None, 
             is_ses:bool=None, 
-            is_using_ssl:bool=None, 
-            is_using_tls:bool=None, 
+            smtp_using_ssl:bool=None, 
+            smtp_using_tls:bool=None, 
             template_dir:str=None,
             attachment_dir:str=None) -> None:
         self.username:str = username
@@ -23,30 +24,38 @@ class Mail:
         self.smtp_port:int = smtp_port
         self.is_smtp:bool = is_smtp
         self.is_ses:bool = is_ses
-        self.is_using_ssl:bool = is_using_ssl
-        self.is_using_tls:bool = is_using_tls
+        self.smtp_using_ssl:bool = smtp_using_ssl
+        self.smtp_using_tls:bool = smtp_using_tls
         self.template_dir:str = template_dir
         self.attachment_dir:str = attachment_dir
         self.c_app = c_app
-        if self.is_using_ssl: self.is_using_tls = False
-        elif self.is_using_tls: self.is_using_ssl = False
+        if self.smtp_using_ssl: self.smtp_using_tls = False
+        elif self.smtp_using_tls: self.smtp_using_ssl = False
         if self.is_smtp: self._configure_smtp()
     
     def _check_none(self,var:list) -> list: return [val for val in var if val == None]
     
     def _configure_smtp(self):
+        if self.smtp_using_ssl: self.smtp_using_tls = False
+        elif self.smtp_using_tls: self.smtp_using_ssl = False
         if not self.is_smtp or self.is_smtp == '': raise InsufficientError('is_smtp')
         if not self.username or self.username == '': raise InsufficientError('username')
         if not self.password or self.password == '': raise InsufficientError('password')
         if not self.smtp_server or self.smtp_server == '': raise InsufficientError('smtp_server')
         if not self.smtp_port or self.smtp_port == '': raise InsufficientError('smtp_port')
-        if not self.is_using_ssl and not self.is_using_tls: raise InsufficientError('is_using_ssl, is_using_tls')
-        self.smtp = SMTP(self.smtp_server, self.smtp_port)
-        self.smtp.ehlo()
-        if self.is_using_ssl: self.smtp.startssl()
-        elif self.is_using_tls: self.smtp.starttls()
-        try: self.smtp.login(self.username, self.password)
-        except Exception as e: raise SMTPLoginError([self.username, self.password], e)
+        if not self.smtp_using_ssl and not self.smtp_using_tls: raise InsufficientError('smtp_using_ssl, smtp_using_tls')
+        if self.smtp_using_tls:
+            self.smtp = SMTP(self.smtp_server, self.smtp_port)
+            self.smtp.ehlo()
+            self.smtp.starttls()
+            try: self.smtp.login(self.username, self.password)
+            except Exception as e: raise SMTPLoginError([self.username, self.password], e)
+        elif self.smtp_using_ssl:
+            context = create_default_context()
+            with SMTP_SSL(self.smtp_server, self.smtp_port, context=context) as self.smtp:
+                try: self.smtp.login(self.username, self.password)
+                except Exception as e: raise SMTPLoginError([self.username, self.password], e)
+                
     
     def login(self): self._configure_smtp()
 
