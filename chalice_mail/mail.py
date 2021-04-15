@@ -5,7 +5,6 @@ from jinja2 import Template, exceptions
 from pathlib import Path
 from ssl import create_default_context
 
-
 class Mail:
     def __init__(self, c_app:Chalice, 
             username:str=None, 
@@ -44,18 +43,14 @@ class Mail:
         if not self.smtp_server or self.smtp_server == '': raise InsufficientError('smtp_server')
         if not self.smtp_port or self.smtp_port == '': raise InsufficientError('smtp_port')
         if not self.smtp_using_ssl and not self.smtp_using_tls: raise InsufficientError('smtp_using_ssl, smtp_using_tls')
-        context = create_default_context()
         if self.smtp_using_tls: # for smtp using start_tls
-            self.smtp = SMTP(self.smtp_server, self.smtp_port, context=context)
+            self.smtp = SMTP(self.smtp_server, self.smtp_port)
             self.smtp.ehlo()
             self.smtp.starttls()
-            try: self.smtp.login(self.username, self.password)
-            except Exception as e: raise SMTPLoginError([self.username, self.password], e)
         elif self.smtp_using_ssl: # for smtp using start_ssl
-            with SMTP_SSL(self.smtp_server, self.smtp_port, context=context) as self.smtp:
-                try: self.smtp.login(self.username, self.password)
-                except Exception as e: raise SMTPLoginError([self.username, self.password], e)
-                
+            self.smtp = SMTP_SSL(self.smtp_server, self.smtp_port)
+        try: self.smtp.login(self.username, self.password)
+        except Exception as e: raise SMTPLoginError([self.username, self.password], e)
     
     def login(self): self._configure_smtp()
 

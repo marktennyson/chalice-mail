@@ -36,6 +36,7 @@ class Message:
         message.attach(self._mimetext())
         message['Subject'] = self.subject
         message['From'] = self.sender or self.mail.username
+        if len(self.recipients) < 0: raise InsufficientError('recipients')
         message['To'] = ", ".join(self.recipients)
         if len(self._attachments) > 0: 
             for attachment in self._attachments: message.attach(attachment)

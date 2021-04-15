@@ -26,4 +26,4 @@ class Jinja2ContextDataError(Exception):
 class AttachmentNotFoundError(Exception):
     def __init__(self, attachment_file):
         self.message = "{0} not found at attachments folder".format(attachment_file)
-        super().__init__("")
+        super().__init__(self.message)

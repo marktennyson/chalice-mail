@@ -10,11 +10,11 @@ app = Chalice(app_name='chalice-mail-test1')
 _baseDir = Path(path.realpath(__file__)).parent
 mail = Mail(app)
 mail.is_smtp = True
-mail.smtp_using_tls = True
+mail.smtp_using_ssl = True
 mail.username = getenv('email_username')
 mail.password = getenv('email_password')
 mail.smtp_server = 'smtp.gmail.com'
-mail.smtp_port = 587
+mail.smtp_port = 465
 mail.template_dir = _baseDir/'templates'
 mail.attachment_dir = _baseDir/'attachments'
 mail.login()
