@@ -15,9 +15,9 @@ class SMTPLoginError(Exception):
         self.message = 'failed to login with: '+', '.join(self.loginCreds)+". Response from smtp server: "+str(errorMessage)
         super().__init__(self.message)
 
-class MIMETypeError(Exception):
-    def __init__(self, flag=False) -> None:
-        super().__init__("html and plain can't be set at same time.")
+class ServerTypeError(Exception):
+    def __init__(self) -> None:
+        super().__init__("please choose only one between smtp and ses.")
 
 class Jinja2ContextDataError(Exception):
     def __init__(self) -> None:
@@ -27,3 +27,7 @@ class AttachmentNotFoundError(Exception):
     def __init__(self, attachment_file):
         self.message = "{0} not found at attachments folder".format(attachment_file)
         super().__init__(self.message)
+
+class SESError(Exception):
+    def __init__(self, message): 
+        super().__init__("failed to send ses email.because: "+str(message))

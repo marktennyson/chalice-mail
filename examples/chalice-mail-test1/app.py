@@ -10,11 +10,11 @@ app = Chalice(app_name='chalice-mail-test1')
 _baseDir = Path(path.realpath(__file__)).parent
 mail = Mail(app)
 mail.is_smtp = True
-mail.smtp_using_ssl = True
+mail.smtp_using_tls = True
 mail.username = getenv('email_username')
 mail.password = getenv('email_password')
 mail.smtp_server = 'smtp.gmail.com'
-mail.smtp_port = 465
+mail.smtp_port = 587
 mail.template_dir = _baseDir/'templates'
 mail.attachment_dir = _baseDir/'attachments'
 mail.login()
@@ -27,8 +27,11 @@ def index():
     msg.add_recipient("aniketsarkarkorea@gmail.com")
     # msg.add_recipient(["aniket@cloodon.com"])
     # msg.html = "<h1>Hello World</h1>"
+    msg.plain = "Aniket"
     msg.html = msg.render_template('text.html', email="aniketsarkarkorea@gmail.com")
-    # msg.body = "Aniket"
-    msg.add_attachment(['aniket.jpg', 'attachments.txt'])
+    
+    msg.add_attachment(['attachments.txt',])
+    # msg.cc = ['aniket@cloodon.com', 'aniketsarkar@yahoo.com']
+    # msg.bcc = ['dipteshhalder20@gmail.com', 'dipteshhalder@outlook.com', 'marktennyson1@yahoo.com']
     mail.send_email(msg)
     return {'message':'email sended successfully'}

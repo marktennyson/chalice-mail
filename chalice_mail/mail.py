@@ -1,14 +1,19 @@
 from smtplib import SMTP, SMTP_SSL
-from .errors import *
 from chalice import Chalice
 from jinja2 import Template, exceptions
 from pathlib import Path
-from ssl import create_default_context
+from boto3 import client
+from botocore.exceptions import ClientError
+from .errors import *
 
 class Mail:
     def __init__(self, c_app:Chalice, 
             username:str=None, 
             password:str=None, 
+            aws_secret_id:str=None, 
+            aws_secret_key:str=None,
+            aws_region:str=None,
+            aws_config:str=None,
             smtp_server:str=None, 
             smtp_port:int=None, 
             is_smtp:bool=None, 
@@ -19,6 +24,10 @@ class Mail:
             attachment_dir:str=None) -> None:
         self.username:str = username
         self.password:str = password
+        self.aws_secret_id = aws_secret_id
+        self.aws_secret_key = aws_secret_key
+        self.aws_region = aws_region
+        self.aws_config = aws_config or 'ConfigSet'
         self.smtp_server:str = smtp_server
         self.smtp_port:int = smtp_port
         self.is_smtp:bool = is_smtp
@@ -31,9 +40,7 @@ class Mail:
         if self.smtp_using_ssl: self.smtp_using_tls = False
         elif self.smtp_using_tls: self.smtp_using_ssl = False
         if self.is_smtp: self._configure_smtp()
-    
-    def _check_none(self,var:list) -> list: return [val for val in var if val == None]
-    
+        
     def _configure_smtp(self):
         if self.smtp_using_ssl: self.smtp_using_tls = False
         elif self.smtp_using_tls: self.smtp_using_ssl = False
@@ -51,11 +58,52 @@ class Mail:
             self.smtp = SMTP_SSL(self.smtp_server, self.smtp_port)
         try: self.smtp.login(self.username, self.password)
         except Exception as e: raise SMTPLoginError([self.username, self.password], e)
-    
-    def login(self): self._configure_smtp()
+        
+    def _configure_ses(self): 
+        if not self.is_ses: raise InsufficientError('is_ses')
+        if not self.aws_region: raise InsufficientError('aws_region')
+        if self.aws_secret_id and not self.aws_secret_key: raise InsufficientError('aws_secret_key')
+        if self.aws_secret_key and not self.aws_secret_id: raise InsufficientError('aws_secret_id')
+        if self.aws_secret_id and self.aws_secret_key: 
+            self.ses = client('ses', aws_access_key_id=self.aws_secret_id, 
+                    aws_secret_access_key=self.aws_secret_key, region_name=self.aws_region)
+        else: self.ses = client('ses', region_name=self.aws_region)
+
+    def login(self): 
+        if self.is_smtp: self._configure_smtp()
+        elif self.is_ses: self._configure_ses()
+
+    def _send_ses_mail(self, message) -> bool:
+        try: 
+            _ = self.ses.send_mail(
+                Destination={
+                    'ToAddresses': [
+                        message.send_to
+                    ],
+                },
+                Message={
+                    'Body': {
+                        'Html': {
+                            'Charset': 'utf-8',
+                            'Data': message.to_string(),
+                        },
+                    },
+                    'Subject': {
+                        'Charset': 'utf-8',
+                        'Data': message.subject,
+                    },
+                },
+                Source=message.sender or self.username,
+                ConfigurationSetName=self.aws_config,
+            )
+            return True
+        except ClientError as e: raise SESError(e)
 
     def send_email(self, message):
-        self.smtp.sendmail(self.username, message.recipients, message.to_string())
+        if self.is_ses and self.is_smtp: raise ServerTypeError
+        if self.is_smtp: self.smtp.sendmail(message.sender or self.username, message.send_to, message.to_string())
+        if self.is_ses: self._send_ses_mail(message)
+
 
     def render_template(self, template_file, **context) -> str:
         if not self.template_dir: raise InsufficientError('template_dir')
