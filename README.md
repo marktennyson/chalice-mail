@@ -147,7 +147,7 @@ def send_smtp_mail():
     This package comes with the jinja2 based template rendering system.
     simpley use the 'render_template()' function to rend the html file.
         'render_template()' functions takes the html file name as arguments 
-        and the context as well as.
+    and the context as well as.
     """
     msg.html = mail.render_template('index.html', context)
     mail.send_email(msg)
@@ -182,7 +182,7 @@ def send_smtp_mail():
     """
     use the 'add_attachments()' function to add the attachments with the message instance. don't forget to 
     put the attachments on the attachments folder.
-    'add_attachments()' function basically takes list or str data type as argument.
+        'add_attachments()' function basically takes list or str data type as argument.
     if you want to add only one attachment just pass the attachment name.
     if you want to add more than one attachments use a list.
     """
