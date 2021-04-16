@@ -179,11 +179,13 @@ def send_smtp_mail():
     msg.subject = "this is the subject"
     msg.add_recipient("aniketsarkar@yahoo.com")
     msg.plain = "This is the email body."
-    # use the 'add_attachments()' function to add the attachments with the message instance. don't forget to 
-    # put the attachments on the attachments folder.
-    # 'add_attachments()' function basically takes list or str data type as argument.
-    # if you want to add only one attachment just pass the attachment name.
-    # if you want to add more than one attachments use a list.
+    """
+    use the 'add_attachments()' function to add the attachments with the message instance. don't forget to 
+    put the attachments on the attachments folder.
+    'add_attachments()' function basically takes list or str data type as argument.
+    if you want to add only one attachment just pass the attachment name.
+    if you want to add more than one attachments use a list.
+    """
     msg.add_attachments(['python.png', 'README.rst'])
     mail.send_email(msg)
     return {'message':'email sended successfully'}
