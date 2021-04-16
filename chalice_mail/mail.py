@@ -97,7 +97,6 @@ class Mail:
         if self.is_smtp: self.smtp.sendmail(message.sender or self.username, message.send_to, message.to_string())
         if self.is_ses: self._send_ses_mail(message)
 
-
     def render_template(self, template_file, **context) -> str:
         if not self.template_dir: raise InsufficientError('template_dir')
         try: 
