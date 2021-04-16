@@ -1,4 +1,4 @@
-from .errors import *
+from ._errors import *
 from email.mime.multipart import MIMEMultipart 
 from email.mime.text import MIMEText 
 from email.mime.base import MIMEBase 
@@ -9,29 +9,29 @@ from pathlib import Path
 from time import time
 
 class Message:
-    def __init__(self, mail, subject:str=str(),
-                sender:str=str(),
+    def __init__(self, mail, subject:str=str(), 
+                sender:str=str(), 
                 recipients:list=list(),
                 plain:str=str(),
                 html:str=str(),
                 cc:list=list(),
                 bcc:list=list(),
                 reply_to:str=str(),
-                timedate:time=None,
+                timedate:float=None,
                 extra_headers:dict=None):
-        self.mail = mail
-        self.subject:str = subject 
-        self.sender:str  = sender
-        self.recipients:list = list(recipients) if not isinstance(recipients, list) else recipients
-        self.plain:str = plain 
-        self.html:str = html
-        self.cc:list = cc
-        self.bcc:list = bcc
+        self.mail = mail # required
+        self.subject:str = subject # optional
+        self.sender:str  = sender # required for ses if not setted the username.
+        self.recipients:list = list(recipients) if not isinstance(recipients, list) else recipients # atleast one value required
+        self.plain:str = plain # required if not using html.
+        self.html:str = html # optional if not using plain.
+        self.cc:list = cc # optional
+        self.bcc:list = bcc # optional
         self._attachments:list = list()
-        self.reply_to:str = reply_to
-        self.timedate:str = formatdate(timedate) if timedate else formatdate(time())
+        self.reply_to:str = reply_to or self.mail.username or self.sender# optional
+        self.timedate:str = formatdate(timedate) if timedate else formatdate(time()) # optional
         self.msg_id:str = make_msgid()
-        self.extra_headers:dict = extra_headers
+        self.extra_headers:dict = extra_headers #optional
     
     @property
     def send_to(self):
@@ -96,3 +96,5 @@ class Message:
             for attachment in attachment_file: self._attach_attachments_with_ins(attachment)
 
     def to_string(self) -> str: return self._make_message().as_string() #it returns the string representation of the message instance.
+
+    def to_bytes(self) -> bytes: return self._make_message().as_bytes()
