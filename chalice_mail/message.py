@@ -37,12 +37,6 @@ class Message:
     def send_to(self):
         return set(self.recipients) | set(self.bcc or ()) | set(self.cc or ())
 
-    # def _mimetext(self):
-    #     if not self.plain and not self.html: raise InsufficientError('plain or html')
-    #     if self.plain and not self.html: return MIMEText(self.plain, 'plain')
-    #     if self.html and not self.plain: return MIMEText(self.html, 'html')
-    #     if self.html and self.plain:
-
     def _make_message(self) -> MIMEMultipart:
         message:MIMEMultipart = MIMEMultipart()
         # message.attach(self._mimetext())
@@ -95,6 +89,6 @@ class Message:
         if isinstance(attachment_file, list):
             for attachment in attachment_file: self._attach_attachments_with_ins(attachment)
 
-    def to_string(self) -> str: return self._make_message().as_string() #it returns the string representation of the message instance.
+    def to_string(self) -> str: return self._make_message().as_string() #it returns the string representation of the Message instance.
 
-    def to_bytes(self) -> bytes: return self._make_message().as_bytes()
+    def to_bytes(self) -> bytes: return self._make_message().as_bytes() #it returns the bytes representation of the Message instance.
