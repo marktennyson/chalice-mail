@@ -9,6 +9,24 @@ from pathlib import Path
 from time import time
 
 class Message:
+    """Encapsulates an email message.
+
+    :param subject: email subject header
+    :param recipients: list of email addresses
+    :param body: plain text message
+    :param html: HTML message
+    :param alts: A dict or an iterable to go through dict() that contains multipart alternatives
+    :param sender: email sender address, or **MAIL_DEFAULT_SENDER** by default
+    :param cc: CC list
+    :param bcc: BCC list
+    :param attachments: list of Attachment instances
+    :param reply_to: reply-to address
+    :param date: send date
+    :param charset: message character set
+    :param extra_headers: A dictionary of additional headers for the message
+    :param mail_options: A list of ESMTP options to be used in MAIL FROM command
+    :param rcpt_options:  A list of ESMTP options to be used in RCPT commands
+    """
     def __init__(self, mail, subject:str=str(), 
                 sender:str=str(), 
                 recipients:list=list(),
@@ -60,11 +78,20 @@ class Message:
         return message
 
     def add_recipient(self, recipient=None) -> None:
+        """Adds another recipient to the message.
+
+        :param recipient: email address of recipient.
+        """
         if recipient is None: return None
         if isinstance(recipient, list): self.recipients.extend(recipient)
         if isinstance(recipient,str): self.recipients.append(recipient)
 
     def render_template(self, template_file, **context) -> str:
+        """render the html templates with context data using the super-power of Jinja2.
+
+        :param template_file: html file name.
+        :param **context: context params for template rendering.
+        """
         if not self.mail.template_dir: raise InsufficientError('template_dir for Mail')
         try: 
             with open(Path(self.mail.template_dir)/template_file, 'r') as f:
@@ -84,11 +111,20 @@ class Message:
         except FileNotFoundError: raise AttachmentNotFoundError(attachment_file)
 
     def add_attachment(self, attachment_file) -> None:
+        """add the attachments with the message instance
+        :param attachment_file: attachment_file name with proper extension.
+        """
         if not self.mail.attachment_dir: raise InsufficientError('attachment_dir')
         if isinstance(attachment_file, str): self._attach_attachments_with_ins(attachment_file)
         if isinstance(attachment_file, list):
             for attachment in attachment_file: self._attach_attachments_with_ins(attachment)
 
-    def to_string(self) -> str: return self._make_message().as_string() #it returns the string representation of the Message instance.
+    def to_string(self) -> str: 
+        """Return the string representation of the Message instance"""
 
-    def to_bytes(self) -> bytes: return self._make_message().as_bytes() #it returns the bytes representation of the Message instance.
+        return self._make_message().as_string()
+
+    def to_bytes(self) -> bytes: 
+        """Return the bytes representation of the Message instance"""
+        
+        return self._make_message().as_bytes()

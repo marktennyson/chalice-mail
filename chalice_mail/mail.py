@@ -6,19 +6,37 @@ from botocore.exceptions import ClientError
 from ._errors import *
 
 class Mail:
-    def __init__(self, username:str=None, 
-            password:str=None, 
-            aws_secret_id:str=None, 
-            aws_secret_key:str=None, 
-            aws_region:str=None, 
+    """Manages email messaging
+
+    :param is_smtp: set True if want to send email using smtp server.
+    :param is_ses: set True if want to send email using aws ses.
+    :param username: smtp login username, required if using smtp.
+    :param password: smtp login password, required if using smtp.
+    :param smtp_server: smtp server name, required if using smtp.
+    :param smtp_port: smtp port number, required if using smtp.
+    :param aws_secret_id: aws IAM user secret id, required if want to pass creds manually.
+    :param aws_secret_key: aws IAM user secret key, required if want to pass creds manually.
+    :param aws_region: deafult region for aws ses, required if using ses.
+    :param smtp_using_ssl: set it True if want to send email using ssl based encryption.
+    :param smtp_using_tls: set it True if want to send email using tls based encryption.
+    :param template_dir: default location for all html templates, required if want to rend html template.
+    :param attachment_dir: default location for all attachments, required if want to send email with attachments.
+    """
+    def __init__(self, is_smtp:bool=None, 
+            is_ses:bool=None,
+            username:str=None, 
+            password:str=None,
             smtp_server:str=None, 
             smtp_port:int=None, 
-            is_smtp:bool=None, 
-            is_ses:bool=None, 
+            aws_secret_id:str=None, 
+            aws_secret_key:str=None, 
+            aws_region:str=None,   
             smtp_using_ssl:bool=None, 
             smtp_using_tls:bool=None, 
             template_dir:str=None, 
             attachment_dir:str=None) -> None: 
+        self.is_smtp:bool = is_smtp # required if using smtp.
+        self.is_ses:bool = is_ses # required if using ses.
         self.username:str = username # required for both smtp and ses.
         self.password:str = password # required if using smtp.
         self.aws_secret_id = aws_secret_id # required if somebody want to pass the creds manually.
@@ -26,8 +44,6 @@ class Mail:
         self.aws_region = aws_region # required is using ses.
         self.smtp_server:str = smtp_server # required if using smtp.
         self.smtp_port:int = smtp_port # required if using smtp.
-        self.is_smtp:bool = is_smtp # required if using smtp.
-        self.is_ses:bool = is_ses # required if using ses.
         self.smtp_using_ssl:bool = smtp_using_ssl # required if using smtp for ssl.
         self.smtp_using_tls:bool = smtp_using_tls # required if using smtp for tls.
         self.template_dir:str = template_dir # required if somebody wants to send email with template rendering.
@@ -65,6 +81,8 @@ class Mail:
         else: self.ses = client('ses', region_name=self.aws_region)
 
     def login(self) -> None: 
+        """create the smtp or ses client object """
+        
         if self.is_smtp: self._configure_smtp()
         elif self.is_ses: self._configure_ses()
 
@@ -92,12 +110,23 @@ class Mail:
         except ClientError as e: raise SESError(e)
 
     def send_email(self, message) -> None:
+        """Sends a single message instance.
+
+        :param message: a Message instance.
+        :required: please select at least one server option between `is_smtp` or `is_ses`
+        """
         if self.is_ses and self.is_smtp: raise ServerTypeError
         if not self.username and not message.sender: raise InsufficientError('username or sender')
         if self.is_smtp: self.smtp.sendmail(message.sender or self.username, message.send_to, message.to_string())
         if self.is_ses: self._send_ses_mail(message)
 
     def render_template(self, template_file, **context) -> str:
+        """
+        render the html templates with context data using the super-power of Jinja2.
+
+        :param template_file: html file name.
+        :param **context: context params for template rendering.
+        """
         if not self.template_dir: raise InsufficientError('template_dir')
         try: 
             with open(Path(self.template_dir)/template_file, 'r') as f:
