@@ -1,4 +1,9 @@
 <h1>One of the most basic functions in a web application is the ability to send emails to your users fully serverlessly.</h1>
+
+# Downloads
+[![Downloads](https://pepy.tech/badge/chalice-mail)](https://pepy.tech/project/chalice-mail) [![Downloads](https://pepy.tech/badge/chalice-mail/month)](https://pepy.tech/project/chalice-mail/month) [![Downloads](https://pepy.tech/badge/chalice-mail/week)](https://pepy.tech/project/chalice-mail/week)
+<br>
+
 # Maintainers wanted
 <!-- [Apply within](https://github.com/github-tools/github/issues/539) -->
 
